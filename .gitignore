@@ -41,4 +41,6 @@ Thumbs.db
 *.tmp
 *.bak
 
+GRAFANA_SETUP.md
+fix-grafana-datasource.sh
 # Made with Bob

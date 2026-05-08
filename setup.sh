@@ -32,7 +32,7 @@ echo ""
 echo -e "${YELLOW}Checking Minikube status...${NC}"
 if ! minikube status >/dev/null 2>&1; then
     echo -e "${YELLOW}Minikube is not running. Starting Minikube...${NC}"
-    minikube start --cpus=4 --memory=8192 --driver=podman
+    minikube start --cpus=4 --memory=8192 --driver=docker
 else
     echo -e "${GREEN}✓ Minikube is running${NC}"
 fi
@@ -175,16 +175,16 @@ echo -e "${BLUE}HPA:${NC}"
 kubectl get hpa demo-app-hpa
 echo ""
 
-# Get service URL
-SERVICE_URL=$(minikube service demo-app --url)
-echo -e "${GREEN}Application URL: ${SERVICE_URL}${NC}"
+# Note about service access
+echo -e "${YELLOW}Note: Service access requires port-forwarding with Docker driver${NC}"
 echo ""
 
 echo -e "${YELLOW}Next Steps:${NC}"
-echo -e "${BLUE}1. Access the application:${NC}"
-echo -e "   ${SERVICE_URL}"
+echo -e "${BLUE}1. Access the application (in a new terminal):${NC}"
+echo -e "   kubectl port-forward svc/demo-app 8080:5000"
+echo -e "   Then open: http://localhost:8080"
 echo ""
-echo -e "${BLUE}2. Access Grafana:${NC}"
+echo -e "${BLUE}2. Access Grafana (in a new terminal):${NC}"
 echo -e "   kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80"
 echo -e "   Then open: http://localhost:3000"
 echo -e "   Default credentials: admin/prom-operator"

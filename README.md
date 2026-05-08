@@ -35,7 +35,7 @@ k8s-auto-scaler/
 
 1. **Start Minikube with sufficient resources:**
    ```bash
-   minikube start --cpus=4 --memory=8192 --driver=podman
+   minikube start --cpus=4 --memory=8192 --driver=docker
    ```
 
 2. **Enable metrics-server:**
@@ -54,6 +54,8 @@ k8s-auto-scaler/
    kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
    ```
    Open http://localhost:3000 (default credentials: admin/prom-operator)
+   
+   **For detailed Grafana setup and dashboard usage, see [GRAFANA_SETUP.md](GRAFANA_SETUP.md)**
 
 5. **Run load test:**
    ```bash
@@ -66,8 +68,11 @@ k8s-auto-scaler/
 ### Sample Application
 - Flask-based Python application
 - Exposes `/metrics` endpoint for Prometheus
-- Custom metric: `http_requests_per_second`
-- Simulates CPU-intensive work
+- Custom metrics:
+  - `http_requests_per_second`: Rate of incoming requests
+  - `http_active_requests`: Number of concurrent requests
+  - `http_requests_total`: Total request counter
+- Simulates CPU-intensive work on `/load` endpoint
 
 ### Prometheus Integration
 - ServiceMonitor for automatic scraping
@@ -75,16 +80,27 @@ k8s-auto-scaler/
 - Integration with Prometheus Adapter
 
 ### HPA Configuration
-- Scales based on custom Prometheus metrics
+- Scales based on multiple metrics:
+  - CPU utilization: 50%
+  - Memory utilization: 80%
+  - Custom Prometheus metric `http_requests_per_second`: 10 req/s per pod
+  - Custom Prometheus metric `http_active_requests`: 5 concurrent requests per pod
 - Min replicas: 1
 - Max replicas: 10
-- Target: 100 requests per second per pod
+- Scale-up: Immediate (0s stabilization)
+- Scale-down: 60s stabilization window
 
 ### Grafana Dashboard
-- Real-time metrics visualization
-- Pod count tracking
-- Request rate monitoring
-- CPU/Memory usage
+- Pre-configured dashboard with 6 panels:
+  1. **Request Rate** - Total and per-pod request rates
+  2. **Active Pods** - Gauge showing current pod count
+  3. **CPU Usage** - CPU consumption per pod
+  4. **Memory Usage** - Memory consumption per pod
+  5. **Active Requests** - Concurrent requests being processed
+  6. **Request Latency** - p50 and p95 latency percentiles
+- Real-time auto-refresh capability
+- Import from `grafana/dashboard.json`
+- See [GRAFANA_SETUP.md](GRAFANA_SETUP.md) for detailed instructions
 
 ## Monitoring the Demo
 
@@ -121,6 +137,11 @@ minikube stop
    - Verify ServiceMonitor is scraping: Check Prometheus targets
    - Ensure metrics are being exposed: `curl http://<pod-ip>:5000/metrics`
 
-3. **Grafana dashboard not showing data:**
-   - Verify Prometheus data source is configured
+3. **Grafana cannot connect to Prometheus:**
+   - Run the fix script: `./fix-grafana-datasource.sh`
+   - Or manually configure data source (see GRAFANA_SETUP.md)
+
+4. **Grafana dashboard not showing data:**
+   - Verify Prometheus data source is configured and working
    - Check that pods are labeled correctly for scraping
+   - See GRAFANA_SETUP.md for detailed troubleshooting

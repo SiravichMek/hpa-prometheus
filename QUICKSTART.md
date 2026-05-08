@@ -54,13 +54,15 @@ kubectl get svc demo-app
 
 ### 4. Access the Application
 
-Get the application URL:
+Port-forward the application service (in a new terminal):
 
 ```bash
-minikube service demo-app --url
+kubectl port-forward svc/demo-app 8080:5000
 ```
 
-Open the URL in your browser to see the demo application.
+Then open http://localhost:8080 in your browser to see the demo application.
+
+**Note:** With Docker driver, we use port-forwarding instead of NodePort for service access.
 
 ### 5. Access Grafana Dashboard
 
@@ -81,6 +83,8 @@ Then open http://localhost:3000 in your browser.
 2. Click "Upload JSON file"
 3. Select `grafana/dashboard.json`
 4. Click "Import"
+
+> **📖 For detailed Grafana setup, dashboard features, and troubleshooting, see [GRAFANA_SETUP.md](GRAFANA_SETUP.md)**
 
 ### 6. Run Load Test
 
@@ -132,22 +136,25 @@ You'll see real-time graphs showing:
 
 ### Scale-Up Triggers
 
-The HPA will scale up when:
+The HPA will scale up when ANY of these conditions are met:
 1. **CPU utilization** exceeds 50%
-2. **Request rate** exceeds 100 requests/second per pod
+2. **Memory utilization** exceeds 80%
+3. **http_requests_per_second** exceeds 10 requests/second per pod
+4. **http_active_requests** exceeds 5 concurrent requests per pod
 
 ### Scale-Down Behavior
 
 - **Stabilization window**: 60 seconds (prevents flapping)
 - **Scale-down rate**: Maximum 50% of pods per minute
-- Pods will scale down when metrics drop below thresholds
+- Pods will scale down when ALL metrics drop below their thresholds
 
 ## Testing Different Scenarios
 
 ### Light Load (No Scaling)
 ```bash
-# Send occasional requests
-while true; do curl $(minikube service demo-app --url); sleep 2; done
+# Port-forward first (in another terminal): kubectl port-forward svc/demo-app 8080:5000
+# Then send occasional requests
+while true; do curl http://localhost:8080; sleep 2; done
 ```
 
 ### Medium Load (2-3 Pods)
