@@ -1,0 +1,31 @@
+# Prometheus Adapter configuration for custom metrics
+# Install with: helm install prometheus-adapter prometheus-community/prometheus-adapter -f k8s/prometheus-adapter-values.yaml -n monitoring
+
+prometheus:
+  url: http://prometheus-kube-prometheus-prometheus.monitoring.svc
+  port: 9090
+
+rules:
+  default: true
+  custom:
+  - seriesQuery: 'http_requests_per_second{namespace!="",pod!=""}'
+    resources:
+      overrides:
+        namespace: {resource: "namespace"}
+        pod: {resource: "pod"}
+    name:
+      matches: "^(.*)$"
+      as: "${1}"
+    metricsQuery: 'avg(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>)'
+
+  - seriesQuery: 'http_active_requests{namespace!="",pod!=""}'
+    resources:
+      overrides:
+        namespace: {resource: "namespace"}
+        pod: {resource: "pod"}
+    name:
+      matches: "^(.*)$"
+      as: "${1}"
+    metricsQuery: 'avg(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>)'
+
+# Made with Bob

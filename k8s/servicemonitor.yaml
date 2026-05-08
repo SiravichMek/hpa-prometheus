@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: demo-app
+  labels:
+    app: demo-app
+    release: prometheus  # Important: must match Prometheus operator release name
+spec:
+  selector:
+    matchLabels:
+      app: demo-app
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+
+# Made with Bob
